@@ -1,14 +1,14 @@
 <?php
 
 
-namespace App\UserAuth\Captcha\Driver;
+namespace App\UserAuth\Captcha\Adapters;
 
 use Exception;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Request;
 use ReCaptcha\ReCaptcha;
 
-class GoogleCaptchaV3 extends AbstractCaptchaDriver implements UserAuthCaptchaDriverInterface
+class GoogleCaptchaV3 extends AbstractCaptchaAdapter implements UserAuthCaptchaAdapterInterface
 {
     public function render(Request $request): string
     {

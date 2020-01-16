@@ -1,10 +1,10 @@
 <?php
 
-namespace App\UserAuth\Captcha\Driver;
+namespace App\UserAuth\Captcha\Adapters;
 
 use Illuminate\Http\Request;
 
-interface UserAuthCaptchaDriverInterface
+interface UserAuthCaptchaAdapterInterface
 {
     /**
      * Undocumented function

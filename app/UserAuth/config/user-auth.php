@@ -1,36 +1,47 @@
 <?php
 
-use App\UserAuth\Captcha\Handler\GoogleCaptchaV3;
+use App\UserAuth\Captcha\Adapters\GoogleCaptchaV3;
 
 return [
 
     /*
     |--------------------------------------------------------------------------
-    | Settings per used auth guards
+    | Settings of UserAuth 
     |--------------------------------------------------------------------------
-    |
-    | This option controls the default authentication "guard" and password
-    | reset options for your application. You may change these defaults
-    | as required, but they're a perfect start for most applications.
+    | 
+    | Settings from "defaults" and from given guard will be merged together (per guard config override defaults) 
+    | For eg. you can use same settings for captcha, but it can be enabled only in "web" guard
     |
     */
 
+    // Default config
     'defaults' => [
 
         'captcha' => [
             'enabled' => true,
-            'driver' => GoogleCaptchaV3::class,
+            'adapter' => GoogleCaptchaV3::class,
             'options' => [
-                
+                'public_key' => '',
+                'private_key' => ''
             ]
         ]
         
     ],
 
+    // Per guard config 
     'guards' => [
-        'web' => [
 
-        ]
+        // Custom "web" guard related config (overrides those in "defaults")
+        'web' => [
+            'captcha' => [
+                'enabled' => false,
+                'options' => [
+                    'public_key' => 'test',
+                    'private_key' => ''
+                ]
+            ]
+        ],
+
     ],
 
 ];

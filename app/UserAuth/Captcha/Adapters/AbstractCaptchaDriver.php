@@ -1,13 +1,13 @@
 <?php
 
 
-namespace App\UserAuth\Captcha\Driver;
+namespace App\UserAuth\Captcha\Adapters;
 
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Request;
 use ReCaptcha\ReCaptcha;
 
-class AbstractCaptchaDriver implements UserAuthCaptchaDriverInterface
+class AbstractCaptchaAdapter implements UserAuthCaptchaAdapterInterface
 {
     protected array $errors = [];
     protected array $options = [];
