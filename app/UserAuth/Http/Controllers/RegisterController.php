@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use App\User;
 use App\UserAuth\Captcha\CaptchaService;
+use App\UserAuth\Support\Config;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
@@ -51,7 +52,9 @@ class RegisterController extends Controller
 
         // Setup captcha
         $this->captchaService = $captchaService;
-        $this->captchaService->setup([]);
+
+        $this->captchaService->setup((array)Config::get('captcha'));
+
     }
 
     /**
