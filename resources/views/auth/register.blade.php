@@ -61,9 +61,18 @@
                             </div>
                         </div>
 
-                        @if($captchaEnabled ?? false)
-                            {!! $captchaHTML ?? '' !!}
-                            @error('userAuthCaptchaErrors'){{ $message }}@enderror
+                        @if($catpcha['enabled'] ?? false)
+                            {!! $catpcha['output'] ?? '' !!}
+
+                            @error($catpcha['validationMessagesKey'])
+                                <div class="form-group row">
+                                    <div class="offset-md-4 col-md-6">
+                                        <span class="invalid-feedback d-block" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    </div>
+                                </div>
+                            @enderror
                         @endif
 
                         <div class="form-group row mb-0">

@@ -5,8 +5,9 @@ namespace App\UserAuth\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use App\User;
+use App\UserAuth\Captcha\Adapters\UserAuthCaptchaAdapterInterface;
 use App\UserAuth\Captcha\CaptchaService;
-use App\UserAuth\Support\Config;
+use App\UserAuth\Support\UserAuthConfig;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
@@ -36,24 +37,27 @@ class RegisterController extends Controller
      */
     protected $redirectTo = RouteServiceProvider::HOME;
 
-    /**
-     * @var CaptchaService
-     */
-    protected $captchaService;
+    protected UserAuthCaptchaAdapterInterface $captcha;
+    
+    protected bool $captchaEnabled = false;
+
+    protected static string $captchaValidationMessagesKey = 'userAuthCaptcha';
 
     /**
      * Create a new controller instance.
      *
      * @return void
      */
-    public function __construct(CaptchaService $captchaService)
+    public function __construct()
     {
         $this->middleware('guest');
 
-        // Setup captcha
-        $this->captchaService = $captchaService;
-
-        $this->captchaService->setup((array)Config::get('captcha'));
+        // Prepare captcha 
+        $this->captchaEnabled = UserAuthConfig::get('captcha.enabled', false);
+        if($this->captchaEnabled) {
+            $this->captcha = resolve(UserAuthConfig::get('captcha.adapter'));
+            $this->captcha->setOptions((array)UserAuthConfig::get('captcha.options', []));
+        }
 
     }
 
@@ -68,8 +72,7 @@ class RegisterController extends Controller
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            '_captcha_token' => ['required']
+            'password' => ['required', 'string', 'min:8', 'max:255', 'confirmed'],
         ]);
     }
 
@@ -95,10 +98,12 @@ class RegisterController extends Controller
      */
     public function showRegistrationForm(Request $request)
     {
-        
         return view('auth.register', [
-            'captchaEnabled' => $this->captchaService->isCaptchaEnabled(),
-            'captchaHTML' => $this->captchaService->render(),
+            'catpcha' => [
+                'enabled' => $this->captchaEnabled,
+                'output' => $this->captchaEnabled ? $this->captcha->render($request) : '',
+                'validationMessagesKey' => static::$captchaValidationMessagesKey
+            ]       
         ]);
     }
 
@@ -110,16 +115,15 @@ class RegisterController extends Controller
      */
     public function register(Request $request)
     {
-        throw ValidationException::withMessages([ 'userAuthCaptchaErrors' => ['test'] ]);
-
-        if($this->captchaService->isCaptchaEnabled()) {
-            if( !$this->captchaService->isRequestValid() ) {
-                throw ValidationException::withMessages([ 'userAuthCaptchaErrors' => $this->captchaService->getValidationErrors() ]);
-            }
-        }
-
-
         $this->validator($request->all())->validate();
+
+        if($this->captchaEnabled && !$this->captcha->validate($request)) {
+            $captchaErrors = $this->captcha->getErrors() ?: [__('auth.captcha.error')];
+
+            throw ValidationException::withMessages([
+                static::$captchaValidationMessagesKey => $captchaErrors
+            ]);
+        }
 
         event(new Registered($user = $this->create($request->all())));
 

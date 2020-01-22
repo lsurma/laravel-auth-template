@@ -3,52 +3,63 @@
 
 namespace App\UserAuth\Captcha\Adapters;
 
-use Exception;
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Request;
 use ReCaptcha\ReCaptcha;
 
 class GoogleCaptchaV3 extends AbstractCaptchaAdapter implements UserAuthCaptchaAdapterInterface
 {
+    public static string $tokenFieldName = '_captcha_token';
+
     public function render(Request $request): string
     {
         $publicKey = $this->getOptions()['public_key'] ?? null;
 
-        if( $publicKey === null) {
-            throw new Exception("Captcha public key (public_key) must be passed via options.");
+        if ($publicKey === null || empty($publicKey)) {
+            throw new \RuntimeException("Captcha public key (public_key) must be passed via options and can not be empty.");
         }
-
-        $hiddenFieldName = '_captcha_token';
 
         return '<script src="https://www.google.com/recaptcha/api.js?render='. $publicKey .'"></script>
         <script>
             grecaptcha.ready(function() {
                 grecaptcha.execute("'. $publicKey .'", { action: "register" }).then(function(token) {
-                $(\'[name="'. $hiddenFieldName .'"]\').val(token);
+                $(\'[name="'. static::$tokenFieldName .'"]\').val(token);
                 });
             });
         </script>
-        <input type="hidden" name="'. $hiddenFieldName .'" value/>';
+        <input type="hidden" name="'. static::$tokenFieldName .'" value/>';
     }
 
     public function validate(Request $request): bool
     {
         $privateKey = $this->getOptions()['private_key'] ?? null;
 
-        if( $privateKey === null) {
-            throw new Exception("Captcha private key (private_key) must be passed via options.");
+        if($privateKey === null || empty($privateKey)) {
+            throw new \RuntimeException("Captcha private key (private_key) must be passed via options and can not be empty.");
         }
 
-        $secret = 'secret';
-
-        $response = (new ReCaptcha($secret))
+        $response = (new ReCaptcha($privateKey))
                     ->setExpectedAction('register')
-                    ->verify($request->input('_captcha_token'), $request->ip());
+                    ->verify($request->input(static::$tokenFieldName), $request->ip());
 
         if ($response->isSuccess() && $response->getScore() > 0.6) {
             return true;
         }
     
+        $this->setErrors($response->getErrorCodes());
+        
         return false;
+    }
+
+    /**
+     * @param array $errors
+     * @return void
+     */
+    public function setErrors(array $errors): void
+    {
+        $this->errors = [];
+
+        foreach($errors as $error) {
+            $this->errors[] = __("auth.captcha.$error");
+        }
     }
 }
