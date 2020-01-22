@@ -39,6 +39,7 @@ class GoogleCaptchaV3 extends AbstractCaptchaAdapter implements UserAuthCaptchaA
 
         $response = (new ReCaptcha($privateKey))
                     ->setExpectedAction('register')
+                    ->setChallengeTimeout(5 * 60)
                     ->verify($request->input(static::$tokenFieldName), $request->ip());
 
         if ($response->isSuccess() && $response->getScore() > 0.6) {
