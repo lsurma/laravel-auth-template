@@ -18,8 +18,8 @@ $defaults = [
         'enabled' => true,
         'adapter' => GoogleCaptchaV3::class,
         'options' => [
-            'public_key' => '',
-            'private_key' => ''
+            'public_key' => env('GOOGLE_CAPTCHA_PUBLIC_KEY'),
+            'private_key' => env('GOOGLE_CAPTCHA_PRIVATE_KEY'),
         ]
     ]
 ];
@@ -29,15 +29,7 @@ return [
     'groups' => [
 
         // Custom "web" guard related config (overrides those in "defaults")
-        'web' => array_replace_recursive($defaults, [
-            'captcha' => [
-                'enabled' => false,
-                'options' => [
-                    'public_key' => 'test',
-                    'private_key' => ''
-                ]
-            ]
-        ])
+        'web' => array_replace_recursive($defaults, [])
 
     ]
 ];
