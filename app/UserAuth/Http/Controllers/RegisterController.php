@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use App\User;
 use App\UserAuth\Captcha\Adapters\UserAuthCaptchaAdapterInterface;
+use App\UserAuth\Rules\BlacklistEmail;
 use App\UserAuth\Rules\PasswordStrength;
 use App\UserAuth\Support\UserAuthConfig;
 use Illuminate\Auth\Events\Registered;
@@ -71,7 +72,7 @@ class RegisterController extends Controller
     {
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users', new BlacklistEmail],
             'password' => ['required', 'string', 'confirmed', new PasswordStrength],
         ]);
     }
