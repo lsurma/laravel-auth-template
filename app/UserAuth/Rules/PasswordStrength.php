@@ -2,6 +2,7 @@
 
 namespace App\UserAuth\Rules;
 
+use App\UserAuth\Models\Blacklist;
 use App\UserAuth\Support\UserAuthConfig;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\Str;
@@ -17,10 +18,10 @@ class PasswordStrength implements Rule
      */
     public function passes($attribute, $value)
     {
-        $forbiddenPasswords = UserAuthConfig::config('forbidden_passwords', []);
+        $blacklisted = Blacklist::whereType(Blacklist::T_PASSWORD)->whereValue($value)->exists();
         $length = mb_strlen($value);
 
-        return $length >= 8 && $length <= 255 && !in_array($value, $forbiddenPasswords);
+        return $length >= 8 && $length <= 255 && !$blacklisted;
     }
 
     /**
