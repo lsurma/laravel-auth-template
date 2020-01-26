@@ -45,5 +45,19 @@ class BlacklistSeeder extends Seeder
 
         // Seed via insert ignore to prevent errors
         DB::table($table)->insertOrIgnore($passwords);
+
+        // Disposable/temp/fake e-mail domains
+        $emailsDomains = file(app_path('UserAuth/database/seeds/email-domains-blacklist.txt'));
+        $emailsDomains = array_map(function($domain) {
+            return ['type' => Blacklist::T_DOMAIN_EMAIL, 'value' => trim($domain)];
+        }, $emailsDomains);
+
+        // Make inserts in chunks
+        $emailsDomainsChunks = array_chunk($emailsDomains, 5000);
+
+        foreach($emailsDomainsChunks as $domains) {
+            DB::table($table)->insertOrIgnore($domains);
+        }
+
     }
 }

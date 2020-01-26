@@ -9,8 +9,9 @@ class Blacklist extends Model
 {
     const T_PASSWORD = 'pwd';
 
-    const T_DOMAIN = 'domain';
+    const T_DOMAIN_EMAIL = 'domain-mail';
 
+    const T_EMAIL = 'mail';
 
     /**
      * The attributes that are mass assignable.
