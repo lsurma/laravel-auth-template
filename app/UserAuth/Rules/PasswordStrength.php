@@ -7,6 +7,8 @@ use Illuminate\Contracts\Validation\Rule;
 
 class PasswordStrength implements Rule
 {
+    protected $message = null;
+
     /**
      * Determine if the validation rule passes.
      *
@@ -16,10 +18,19 @@ class PasswordStrength implements Rule
      */
     public function passes($attribute, $value)
     {
-        $blacklisted = Blacklist::whereType(Blacklist::T_PASSWORD)->whereValue($value)->exists();
         $length = mb_strlen($value);
 
-        return $length >= 8 && $length <= 255 && !$blacklisted;
+        if($length < 8) {
+            $this->message = __('validation.min', ['min' => 8]);
+            return false;
+        }
+
+        if($length > 255) {
+            $this->message = __('validation.max', ['max' => 255]);
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -29,6 +40,6 @@ class PasswordStrength implements Rule
      */
     public function message()
     {
-        return __('validation.password_strength');
+        return $this->message ?: __('validation.password_strength');
     }
 }

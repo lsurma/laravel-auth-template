@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use App\User;
 use App\UserAuth\Captcha\Adapters\UserAuthCaptchaAdapterInterface;
-use App\UserAuth\Rules\BlacklistEmail;
 use App\UserAuth\Rules\PasswordStrength;
 use App\UserAuth\Support\UserAuthConfig;
 use Illuminate\Auth\Events\Registered;
@@ -15,6 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use LSurma\LaravelBlacklist\Rules\EmailAllowed;
+use LSurma\LaravelBlacklist\Rules\PasswordAllowed;
 
 class RegisterController extends Controller
 {
@@ -55,11 +56,11 @@ class RegisterController extends Controller
 
         // Prepare captcha 
         $this->captchaEnabled = UserAuthConfig::get('captcha.enabled', false);
+
         if($this->captchaEnabled) {
             $this->captcha = resolve(UserAuthConfig::get('captcha.adapter'));
             $this->captcha->setOptions((array)UserAuthConfig::get('captcha.options', []));
         }
-
     }
 
     /**
@@ -72,8 +73,8 @@ class RegisterController extends Controller
     {
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users', new BlacklistEmail],
-            'password' => ['required', 'string', 'confirmed', new PasswordStrength],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users', new EmailAllowed],
+            'password' => ['required', 'string', 'confirmed', new PasswordStrength, new PasswordAllowed],
         ]);
     }
 
