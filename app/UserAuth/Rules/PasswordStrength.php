@@ -21,12 +21,12 @@ class PasswordStrength implements Rule
         $length = mb_strlen($value);
 
         if($length < 8) {
-            $this->message = __('validation.min', ['min' => 8]);
+            $this->message = __('validation.min.string', ['min' => 8]);
             return false;
         }
 
         if($length > 255) {
-            $this->message = __('validation.max', ['max' => 255]);
+            $this->message = __('validation.max.string', ['max' => 255]);
             return false;
         }
 
