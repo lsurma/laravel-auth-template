@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\UserAuth\Providers\UserProvider;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
@@ -25,6 +27,9 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        // Register custom users provider
+        Auth::provider('user-auth-eloquent', function ($app, array $config) {
+            return new UserProvider($app['hash'], $config['model']);
+        });
     }
 }
