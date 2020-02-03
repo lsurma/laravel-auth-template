@@ -31,6 +31,6 @@ Route::get('password/confirm', 'ConfirmPasswordController@showConfirmForm')->nam
 Route::post('password/confirm', 'ConfirmPasswordController@confirm');
 
 // Email Verification Routes
-Route::get('email/verify', 'VerificationController@show')->name('user-auth.verification.notice');
-Route::get('email/verify/{id}/{hash}', 'VerificationController@verify')->name('user-auth.verification.verify');
-Route::post('email/resend', 'VerificationController@resend')->name('user-auth.verification.resend');
+Route::get('email/verify', 'EmailVerificationController@show')->name('user-auth.verification.notice');
+Route::get('email/verify/{id}/{hash}', 'EmailVerificationController@verify')->name('user-auth.verification.verify');
+Route::post('email/resend', 'EmailVerificationController@resend')->name('user-auth.verification.resend');

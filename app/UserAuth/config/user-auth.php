@@ -21,7 +21,17 @@ $defaults = [
             'public_key' => env('GOOGLE_CAPTCHA_PUBLIC_KEY'),
             'private_key' => env('GOOGLE_CAPTCHA_PRIVATE_KEY'),
         ]
-    ]
+    ],
+
+    'email_verification' => [
+        // Determines if notification about e-mail verification will be send
+        'enabled' => true,
+
+        // Determines if verified e-mail is required for logging in
+        'required' => true
+    ],
+
+    
 ];
 
 return [

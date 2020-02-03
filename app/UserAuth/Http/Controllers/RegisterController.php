@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use App\User;
 use App\UserAuth\Captcha\Adapters\UserAuthCaptchaAdapterInterface;
+use App\UserAuth\Events\EventData;
+use App\UserAuth\Events\EventParams;
+use App\UserAuth\Events\Registration\Registered as UserAuthRegistered;
 use App\UserAuth\Rules\PasswordStrength;
 use App\UserAuth\Support\UserAuthConfig;
 use Illuminate\Auth\Events\Registered;
@@ -39,10 +42,33 @@ class RegisterController extends Controller
      */
     protected $redirectTo = RouteServiceProvider::HOME;
 
+    /**
+     * Config group
+     * @var string 
+     */
+    protected string $configGroup = 'web';
+
+    /**
+     * Guard used
+     */
+    protected string $guard = 'web';
+
+    /**
+     * Captcha adapter
+     * @var UserAuthCaptchaAdapterInterface
+     */
     protected UserAuthCaptchaAdapterInterface $captcha;
     
+    /**
+     * Determine if captcha is enabled, based on configuration values
+     * @var bool 
+     */
     protected bool $captchaEnabled = false;
 
+    /**
+     * Captcha validation message key. Used in in error messages and templates
+     * @var string
+     */
     protected static string $captchaValidationMessagesKey = 'userAuthCaptcha';
 
     /**
@@ -55,7 +81,7 @@ class RegisterController extends Controller
         $this->middleware('guest');
 
         // Prepare captcha 
-        $this->captchaEnabled = UserAuthConfig::get('captcha.enabled', false);
+        $this->captchaEnabled = UserAuthConfig::get('captcha.enabled', false, $this->configGroup);
 
         if($this->captchaEnabled) {
             $this->captcha = resolve(UserAuthConfig::get('captcha.adapter'));
@@ -73,7 +99,7 @@ class RegisterController extends Controller
     {
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users', new EmailAllowed],
+            'email' => ['required', 'string', 'email', 'max:255', new EmailAllowed, 'unique:users'],
             'password' => ['required', 'string', 'confirmed', new PasswordStrength, new PasswordAllowed],
         ]);
     }
@@ -119,6 +145,9 @@ class RegisterController extends Controller
     {
         $this->validator($request->all())->validate();
 
+        /**
+         * @TODO: Move to separte method and user "after" validation hook
+         */
         if($this->captchaEnabled && !$this->captcha->validate($request)) {
             $captchaErrors = $this->captcha->getErrors() ?: [__('auth.captcha.error')];
 
@@ -127,8 +156,16 @@ class RegisterController extends Controller
             ]);
         }
 
-        event(new Registered($user = $this->create($request->all())));
+        // Create user
+        $user = $this->create($request->all());
 
+        // Emit original laravel Registered event
+        event(new Registered($user));
+
+        // Emit UserAuth package registered event with some aditional data
+        event(new UserAuthRegistered($user, new EventData($this->guard, $this->configGroup)));
+
+        // Log in user automatically
         $this->guard()->login($user);
 
         return $this->registered($request, $user)
