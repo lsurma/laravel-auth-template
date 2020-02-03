@@ -1,4 +1,7 @@
-# Laravel extended authentication template
+# Laravel extended user authentication
+Laravel application with modified and extended user authentication processes.
+Currently in development and should not be used in any production services.
+Goal of this project is to make safe, robust and configurable package for user authentication processes.
 
 ## TODO
 - [x] Captcha in registration 
