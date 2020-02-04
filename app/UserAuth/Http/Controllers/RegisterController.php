@@ -135,7 +135,7 @@ class RegisterController extends Controller
         ));
 
         // Log in user automatically if enabled
-        if($this->config->loginAfterRegistrationEnabled()) {
+        if($this->config->autoLoginAfterRegistrationEnabled()) {
             $this->guard()->login($user);
         }
 

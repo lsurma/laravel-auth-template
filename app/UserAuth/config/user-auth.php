@@ -28,13 +28,20 @@ $defaults = [
         // Determines if notification about e-mail verification will be send
         'enabled' => true,
 
-        // Determines if verified e-mail is required for logging in
-        'required' => true
+        // Notification class which will be used for sending verification request
+        'notification' => '',
     ],
 
-    // Determine if user should be logged in automatically after registration
-    'login_after_registration' => false,
+    'login' => [
+        // Determines if verified e-mail is required for logging in
+        'verified_email_required' => true
+    ],
 
+    'registration' => [
+        // Determine if user should be logged in automatically after registering
+        'auto_login' => false,
+    ]
+    
 ];
 
 return [

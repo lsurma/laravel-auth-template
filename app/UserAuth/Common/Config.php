@@ -45,9 +45,21 @@ class Config
     /**
      * @return boolean
      */
-    public function loginAfterRegistrationEnabled(): bool
+    public function autoLoginAfterRegistrationEnabled(): bool
     {
-        return $this->get('login_after_registration', true);
+        return $this->get('registration.auto_login', true);
+    }
+
+    //-----------------------------------------------------
+    // Login related config accessors
+    //-----------------------------------------------------
+    
+    /**
+     * @return boolean
+     */
+    public function verifiedEmailForLoginRequired(): bool
+    {
+        return $this->get('login.verified_email_required', true);
     }
 
     //-----------------------------------------------------
