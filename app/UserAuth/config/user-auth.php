@@ -20,7 +20,8 @@ $defaults = [
         'options' => [
             'public_key' => env('GOOGLE_CAPTCHA_PUBLIC_KEY'),
             'private_key' => env('GOOGLE_CAPTCHA_PRIVATE_KEY'),
-        ]
+        ],
+        'validation_message_key' => 'captchaValidationMessagesKey'
     ],
 
     'email_verification' => [
@@ -31,7 +32,9 @@ $defaults = [
         'required' => true
     ],
 
-    
+    // Determine if user should be logged in automatically after registration
+    'login_after_registration' => false,
+
 ];
 
 return [

@@ -7,7 +7,7 @@ use App\Providers\RouteServiceProvider;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
-
+use App\UserAuth\Common\Config;
 class LoginController extends Controller
 {
     /*
@@ -31,6 +31,23 @@ class LoginController extends Controller
     protected $redirectTo = RouteServiceProvider::HOME;
 
     /**
+     * Config group
+     * @var string 
+     */
+    protected string $configGroup = 'web';
+
+    /**
+     * Guard used
+     * @var string
+     */
+    protected string $guard = 'web';
+
+    /**
+     * @var \App\UserAuth\Common\Config
+     */
+    protected Config $config;
+
+    /**
      * Create a new controller instance.
      *
      * @return void
@@ -38,6 +55,9 @@ class LoginController extends Controller
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
+
+        // UserAuthConfig support object
+        $this->config = new Config($this->configGroup);
     }
 
     /**

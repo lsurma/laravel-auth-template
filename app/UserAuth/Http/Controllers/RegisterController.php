@@ -6,17 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use App\User;
 use App\UserAuth\Captcha\Adapters\UserAuthCaptchaAdapterInterface;
+use App\UserAuth\Common\Config;
 use App\UserAuth\Events\EventData;
-use App\UserAuth\Events\EventParams;
 use App\UserAuth\Events\Registration\Registered as UserAuthRegistered;
 use App\UserAuth\Rules\PasswordStrength;
-use App\UserAuth\Support\UserAuthConfig;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
+
 use LSurma\LaravelBlacklist\Rules\EmailAllowed;
 use LSurma\LaravelBlacklist\Rules\PasswordAllowed;
 
@@ -50,26 +51,20 @@ class RegisterController extends Controller
 
     /**
      * Guard used
+     * @var string
      */
     protected string $guard = 'web';
+
+    /**
+     * @var \App\UserAuth\Common\Config
+     */
+    protected Config $config;
 
     /**
      * Captcha adapter
      * @var UserAuthCaptchaAdapterInterface
      */
-    protected UserAuthCaptchaAdapterInterface $captcha;
-    
-    /**
-     * Determine if captcha is enabled, based on configuration values
-     * @var bool 
-     */
-    protected bool $captchaEnabled = false;
-
-    /**
-     * Captcha validation message key. Used in in error messages and templates
-     * @var string
-     */
-    protected static string $captchaValidationMessagesKey = 'userAuthCaptcha';
+    protected ?UserAuthCaptchaAdapterInterface $captchaAdapter = null;
 
     /**
      * Create a new controller instance.
@@ -80,15 +75,73 @@ class RegisterController extends Controller
     {
         $this->middleware('guest');
 
+        // UserAuthConfig support object
+        $this->config = new Config($this->configGroup);
+        
         // Prepare captcha 
-        $this->captchaEnabled = UserAuthConfig::get('captcha.enabled', false, $this->configGroup);
-
-        if($this->captchaEnabled) {
-            $this->captcha = resolve(UserAuthConfig::get('captcha.adapter'));
-            $this->captcha->setOptions((array)UserAuthConfig::get('captcha.options', []));
+        if($this->config->captchaEnabled()) {
+            // Resolve captcha adapter from service container
+            $this->captchaAdapter = resolve($this->config->getCaptchaAdapter());
+            
+            // Pass options from captcha config to captcha adapter
+            $this->captchaAdapter->setOptions(
+                $this->config->getCaptchaOptions()
+            );
         }
     }
 
+
+    /**
+     * Show the application registration form.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function showRegistrationForm(Request $request)
+    {
+        return view('auth.register', [
+            'catpcha' => [
+                'enabled' => $this->config->captchaEnabled(),
+                'output' => $this->config->captchaEnabled() ? $this->captchaAdapter->render($request) : '',
+                'validationMessagesKey' => $this->config->getCaptchaValidationMessageKey()
+            ]
+        ]);
+    }
+
+    /**
+     * Handle a registration request for the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function register(Request $request)
+    {
+        // Run defined validators, if there will be errors, exception will be thrown
+        $this->validator($request->all())
+             ->after(function(ValidatorContract $validator) use ($request) {
+                $this->validateCaptcha($request, $validator);
+             })
+             ->validate();
+
+        // Create user
+        $user = $this->create($request->all());
+
+        // Emit original laravel Registered event
+        event(new Registered($user));
+
+        // Emit UserAuth package registered event with some aditional data
+        event(new UserAuthRegistered(
+            $user, 
+            new EventData($this->guard, $this->configGroup)
+        ));
+
+        // Log in user automatically if enabled
+        if($this->config->loginAfterRegistrationEnabled()) {
+            $this->guard()->login($user);
+        }
+
+        return $this->registered($request, $user) ?: redirect($this->redirectPath());
+    }
+    
     /**
      * Get a validator for an incoming registration request.
      *
@@ -120,55 +173,37 @@ class RegisterController extends Controller
     }
 
     /**
-     * Show the application registration form.
+     * Get the guard to be used during registration.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\Auth\StatefulGuard
      */
-    public function showRegistrationForm(Request $request)
+    protected function guard()
     {
-        return view('auth.register', [
-            'catpcha' => [
-                'enabled' => $this->captchaEnabled,
-                'output' => $this->captchaEnabled ? $this->captcha->render($request) : '',
-                'validationMessagesKey' => static::$captchaValidationMessagesKey
-            ]       
-        ]);
+        return Auth::guard($this->guard);
     }
 
     /**
-     * Handle a registration request for the application.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @param ValidatorContract $validator
+     * @return void|bool
      */
-    public function register(Request $request)
+    protected function validateCaptcha(Request $request, ValidatorContract $validator)
     {
-        $this->validator($request->all())->validate();
-
-        /**
-         * @TODO: Move to separte method and user "after" validation hook
-         */
-        if($this->captchaEnabled && !$this->captcha->validate($request)) {
-            $captchaErrors = $this->captcha->getErrors() ?: [__('auth.captcha.error')];
-
-            throw ValidationException::withMessages([
-                static::$captchaValidationMessagesKey => $captchaErrors
-            ]);
+        // If captcha is not enabled, or if is validated successfully return true
+        if(!$this->config->captchaEnabled() 
+           || $this->captchaAdapter->validate($request) 
+        ) {
+            return true;
         }
 
-        // Create user
-        $user = $this->create($request->all());
+        // In other case prepare errors and pass it to given validator instance
+        $errors = $this->captchaAdapter->getErrors() ?: [__('auth.captcha.error')];
 
-        // Emit original laravel Registered event
-        event(new Registered($user));
-
-        // Emit UserAuth package registered event with some aditional data
-        event(new UserAuthRegistered($user, new EventData($this->guard, $this->configGroup)));
-
-        // Log in user automatically
-        $this->guard()->login($user);
-
-        return $this->registered($request, $user)
-                        ?: redirect($this->redirectPath());
+        foreach($errors as $error) {
+            $validator->errors()->add(
+                $this->config->getCaptchaValidationMessageKey(), 
+                $error
+            );
+        }
     }
 }
