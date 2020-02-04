@@ -7,7 +7,8 @@ Goal of this project is to make safe, robust and configurable package for user a
 - [x] Captcha in registration 
 - [x] Password strength validation rule
 - [x] E-mail domain validation 
-- [ ] E-mail verification, prevent login when user has not verified it's e-mail address
+- [x] Prevent login when user has not verified it's e-mail address (configurable)
+- [ ] E-mail verification notification (configurable)
 - [ ] User session tracking
 - [ ] Session authentication (with custom token, instead of hashed user password like laravels do)
 - [ ] 2FA 
