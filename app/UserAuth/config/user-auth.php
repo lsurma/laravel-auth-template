@@ -1,6 +1,7 @@
 <?php
 
 use App\UserAuth\Captcha\Adapters\GoogleCaptchaV3;
+use App\UserAuth\Notifications\VerifyEmail;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,8 +29,14 @@ $defaults = [
         // Determines if notification about e-mail verification will be send
         'enabled' => true,
 
+        // Route to verification controller
+        'route' => 'user-auth.verification.verify',
+
         // Notification class which will be used for sending verification request
-        'notification' => '',
+        'notification' => VerifyEmail::class,
+
+        // Expiration time in minutes for verification link
+        'link_expire_time' => 120
     ],
 
     'login' => [

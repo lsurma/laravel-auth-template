@@ -3,6 +3,7 @@
 namespace App\UserAuth\Common;
 
 use App\UserAuth\Captcha\Adapters\UserAuthCaptchaAdapterInterface;
+use App\UserAuth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Config as LaravelConfig;
 
 class Config
@@ -55,11 +56,47 @@ class Config
     //-----------------------------------------------------
     
     /**
+     * Determine if verified email is required to log in
      * @return boolean
      */
-    public function verifiedEmailForLoginRequired(): bool
+    public function verifiedEmailRequired(): bool
     {
         return $this->get('login.verified_email_required', true);
+    }
+
+    //-----------------------------------------------------
+    // E-mail verification related config accessors
+    //-----------------------------------------------------
+    
+    /**
+     * @return int
+     */
+    public function getEmailVerificationLinkExpireTime(): int
+    {
+        return $this->get('email_verification.link_expire_time', 120);
+    }
+
+    public function getEmailVerificationRoute(): string
+    {
+        return $this->get('email_verification.route', 'user-auth.verification.verify');
+    }
+
+    /**
+     * @return boolean
+     */
+    public function emailVerificationEnabled(): bool
+    {
+        return $this->get('email_verification.enabled', false);
+    }
+
+    /**
+     * Get notification class for e-mail verification
+     *
+     * @return string
+     */
+    public function getEmailVerificationNotification(): string
+    {
+        return $this->get('email_verification.notification', VerifyEmail::class);
     }
 
     //-----------------------------------------------------

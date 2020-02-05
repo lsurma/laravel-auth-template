@@ -72,7 +72,7 @@ class LoginController extends Controller
         $credentials = $request->only($this->username(), 'password');
 
         // Custom credentials requirements via closure
-        if ($this->config->verifiedEmailForLoginRequired()) {
+        if ($this->config->verifiedEmailRequired()) {
             $credentials[] = function(Builder $query) {
                 $query->whereNotNull('email_verified_at');
             };

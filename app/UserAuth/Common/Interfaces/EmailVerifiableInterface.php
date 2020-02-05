@@ -2,6 +2,8 @@
 
 namespace App\UserAuth\Common\Interfaces;
 
+use Illuminate\Notifications\Notification;
+
 interface EmailVerifiableInterface
 {
     /**
@@ -23,7 +25,7 @@ interface EmailVerifiableInterface
      *
      * @return void
      */
-    public function sendEmailVerificationNotification();
+    public function sendEmailVerificationNotification(?Notification $notification = null);
 
     /**
      * Get the email address that should be used for verification.
