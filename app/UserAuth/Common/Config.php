@@ -24,7 +24,7 @@ class Config
 
     public function get(?string $key = null, $default = null)
     {
-        // Glue parts of config key together width dot notation
+        // Glue parts of config key together with dot notation
         $key = implode(".", [
             static::PREFIX,
             'groups',
