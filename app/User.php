@@ -2,11 +2,13 @@
 
 namespace App;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\UserAuth\Common\Interfaces\EmailVerifiableInterface;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Notifications\Notification;
 
-class User extends Authenticatable
+class User extends Authenticatable implements EmailVerifiableInterface
 {
     use Notifiable;
 
@@ -36,4 +38,14 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Send the email verification notification.
+     *
+     * @return void
+     */
+    public function sendEmailVerificationNotification(?Notification $notification = null)
+    {
+        $this->notify($notification ?: new VerifyEmail);
+    }
 }

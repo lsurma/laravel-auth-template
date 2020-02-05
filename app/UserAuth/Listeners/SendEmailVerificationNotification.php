@@ -2,9 +2,12 @@
 
 namespace App\UserAuth\Listeners;
 
+use App\UserAuth\Common\Config;
 use App\UserAuth\Common\Interfaces\EmailVerifiableInterface;
+use App\UserAuth\Common\Interfaces\EmailVerificationNotificationInterface;
 use App\UserAuth\Events\Registration\Registered as UserAuthRegistered;
-use Illuminate\Foundation\Auth\User;
+use Illuminate\Notifications\Notification;
+use RuntimeException;
 
 class SendEmailVerificationNotification
 {
@@ -16,14 +19,26 @@ class SendEmailVerificationNotification
      */
     public function handle(UserAuthRegistered $event)
     {
-        $emailVerificationEnabled = true;
-        
+        $config = new Config($event->eventData->configGroup);
+
         if (
-            $emailVerificationEnabled 
+            $config->emailVerificationEnabled()
             && $event->user instanceof EmailVerifiableInterface
             && !$event->user->hasVerifiedEmail()
         ) {
-            $event->user->sendEmailVerificationNotification();
+            /** @var Notification $notification */
+            $notification = resolve($config->getEmailVerificationNotification());
+
+            if(!$notification) {
+                throw new RuntimeException("Notification class not found in service container");
+            }
+            
+            if($notification instanceof EmailVerificationNotificationInterface) {
+                $notification->setVerificationRoute($config->getEmailVerificationRoute());
+                $notification->setVerificationLinkExpireTime($config->getEmailVerificationLinkExpireTime());
+            }
+
+            $event->user->sendEmailVerificationNotification($notification);
         }
     }
 }
