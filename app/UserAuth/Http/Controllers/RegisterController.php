@@ -131,7 +131,7 @@ class RegisterController extends Controller
         // Emit UserAuth package registered event with some aditional data
         event(new UserAuthRegistered(
             $user, 
-            new EventData($this->guard, $this->configGroup)
+            new EventData($this->configGroup, $this->guard)
         ));
 
         // Log in user automatically if enabled

@@ -7,7 +7,7 @@ class EventData
     public string $guard;
     public string $configGroup;
 
-    public function __construct(string $guard, string $configGroup)
+    public function __construct(string $configGroup, string $guard)
     {
         $this->guard = $guard;
         $this->configGroup = $configGroup;
