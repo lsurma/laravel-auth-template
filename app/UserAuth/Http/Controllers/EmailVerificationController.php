@@ -8,7 +8,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\RedirectsUsers;
 use Illuminate\Http\Request;
-use App\UserAuth\Common\Config;
+use App\UserAuth\Services\UserAuthService;
 use Illuminate\Support\Facades\Auth;
 
 class EmailVerificationController extends Controller
@@ -47,9 +47,9 @@ class EmailVerificationController extends Controller
     protected string $guard = 'web';
 
     /**
-     * @var \App\UserAuth\Common\Config
+     * @var \App\UserAuth\Services\UserAuthService
      */
-    protected Config $config;
+    protected UserAuthService $userAuthSerivce;
 
     /**
      * Create a new controller instance.
@@ -59,16 +59,15 @@ class EmailVerificationController extends Controller
     public function __construct()
     {
         $this->middleware('signed')->only('verify');
-        $this->middleware('throttle:6,1')->only('verify', 'resend');
 
-        // Set configuration repository
-        $this->config = new Config($this->configGroup);
+        // Throttle max attempts to resend email verification notice
+        $this->middleware('throttle:5,15')->only('verify', 'resend');
 
-        // config group i guard
-        // templatka z adresem email
-        // 
+        $this->userAuthSerivce = resolve(UserAuthService::class);
+        $this->userAuthSerivce->setConfigGroup($this->configGroup);
+
+        $this->redirectTo = route('user-auth.login');
     }
-
 
     /**
      * Show the email verification notice.
@@ -78,7 +77,8 @@ class EmailVerificationController extends Controller
      */
     public function show(Request $request)
     {
-        $user = null;
+        /** @var \Illuminate\Foundation\Auth\User $user */
+        $user = $this->guard()->user();
 
         return $user && $user->hasVerifiedEmail()
                     ? redirect($this->redirectPath())
@@ -95,7 +95,7 @@ class EmailVerificationController extends Controller
      */
     public function verify(Request $request)
     {
-        /** @var Illuminate\Foundation\Auth\User $user */
+        /** @var \Illuminate\Foundation\Auth\User $user */
         $user = $this->userProvider()->retrieveById($request->route('id'));
 
         if (! hash_equals((string) $request->route('id'), (string) $user->getKey())) {
@@ -125,19 +125,32 @@ class EmailVerificationController extends Controller
      */
     public function resend(Request $request)
     {
-        if ($request->user()->hasVerifiedEmail()) {
-            return redirect($this->redirectPath());
+        $email = $request->request->get('email');
+
+        /**     
+         * Try to find user based on provided e-mail address
+         * If user is not found, or it's email is already verified we should not inform user about this
+         * Because this can leak informations about our user database
+         * 
+         * @var \App\UserAuth\Common\Interfaces\EmailVerifiableInterface $user
+         */
+        $user = $this->userProvider()->retrieveByCredentials([
+            'email' => $email
+        ]);
+
+        // Resend e-mail only if user is found and his email is not verified
+        if ($user && !$user->hasVerifiedEmail()) {
+            $this->userAuthSerivce->sendEmailVerificationNotification($user);
         }
 
-        $request->user()->sendEmailVerificationNotification();
-
+        // Back to same page with simple message
         return back()->with('resent', true);
     }
 
     /**
      * Get the guard to be used during email verification.
      *
-     * @return \Illuminate\Contracts\Auth\Guard|\Illuminate\Contracts\Auth\StatefulGuard|\Illuminate\Auth\SessionGuard
+     * @return \Illuminate\Contracts\Auth\StatefulGuard|\Illuminate\Auth\SessionGuard
      */
     protected function guard()
     {

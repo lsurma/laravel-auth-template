@@ -2,6 +2,17 @@
 
 @section('content')
 <div class="container">
+
+    @if (session('verified'))
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="alert alert-success" role="alert">
+                    {{ __('E-mail address has been verified.') }}
+                </div>
+            </div>
+        </div>
+    @endif
+    
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
