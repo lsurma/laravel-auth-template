@@ -48,4 +48,14 @@ class User extends Authenticatable implements EmailVerifiableInterface
     {
         $this->notify($notification ?: new VerifyEmail);
     }
+
+    /**
+     * Get session authentication token
+     *
+     * @return string
+     */
+    public function getSessionAuthToken()
+    {
+        return 'some_token_from_user_account';
+    }
 }
