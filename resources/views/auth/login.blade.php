@@ -12,6 +12,20 @@
             </div>
         </div>
     @endif
+
+    @if (session('registered'))
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="alert alert-success" role="alert">
+                    <p class="mb-0">{{ __('Your account has beed registered.') }}</p>
+
+                    @if (session('emailVerificationEnabled'))
+                        <p class="mb-0">{{ __('Verification link has been sent to your email address.') }}</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
     
     <div class="row justify-content-center">
         <div class="col-md-8">
