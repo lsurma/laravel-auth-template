@@ -9,7 +9,8 @@ Goal of this project is to make safe, robust and configurable package for user a
 - [x] E-mail domain validation 
 - [x] Prevent login when user has not verified it's e-mail address
 - [x] E-mail verification notification
-- [ ] Session authentication (with custom token, instead of hashed user password like laravels do)
+- [x] Information about e-mail verification after register
+- [x] Session authentication (with custom token, instead of hashed user password like laravels do)
 - [ ] Forcing reset password 
 - [ ] User session tracking
 - [ ] 2FA 
