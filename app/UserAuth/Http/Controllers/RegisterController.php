@@ -143,6 +143,21 @@ class RegisterController extends Controller
     }
     
     /**
+     * The user has been registered.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function registered(Request $request, $user)
+    {
+        return redirect()->route('user-auth.login')->with([
+            'registered' => true,
+            'emailVerificationEnabled' => $this->config->emailVerificationEnabled()
+        ]);
+    }
+
+    /**
      * Get a validator for an incoming registration request.
      *
      * @param  array  $data
@@ -190,9 +205,7 @@ class RegisterController extends Controller
     protected function validateCaptcha(Request $request, ValidatorContract $validator)
     {
         // If captcha is not enabled, or if is validated successfully return true
-        if(!$this->config->captchaEnabled() 
-           || $this->captchaAdapter->validate($request) 
-        ) {
+        if(!$this->config->captchaEnabled() || $this->captchaAdapter->validate($request)) {
             return true;
         }
 
