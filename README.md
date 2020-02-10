@@ -12,8 +12,8 @@ Goal of this project is to make safe, robust and configurable package for user a
 - [x] Information about e-mail verification after register
 - [x] Session authentication (with custom token, instead of hashed user password like laravels do)
 - [ ] Config based on laravel guards, instead of custom groups, to maintain compatibility with some core functionalities, events etc.
-- [ ] Forcing reset password 
 - [ ] User session tracking
+- [ ] Forcing reset password 
 - [ ] 2FA 
 - [ ] Socail login (via socialite)
 - [ ] Password status (in case of login via social provider)
