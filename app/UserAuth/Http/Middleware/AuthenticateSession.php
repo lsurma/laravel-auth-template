@@ -2,12 +2,13 @@
 
 namespace App\UserAuth\Http\Middleware;
 
+use App\UserAuth\Common\Interfaces\HasSessionAuthInterface;
 use Closure;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 
 /**
- * Based on Laravel middleware, but instead of password hash as our session identifier,
+ * Based on Laravel middleware (\Illuminate\Session\Middleware\AuthenticateSession::class), but instead of password hash as our session identifier,
  * we will be using custom property called "session_auth_token" 
  */
 class AuthenticateSession
@@ -18,6 +19,13 @@ class AuthenticateSession
      * @var \Illuminate\Auth\SessionGuard|\Illuminate\Contracts\Auth\Factory
      */
     protected $auth;
+
+    /**
+     * Key under which session auth token will be stored
+     *
+     * @var string
+     */
+    protected $sessionAttributeKey = 'session_auth_token';
 
     /**
      * Create a new middleware instance.
@@ -43,15 +51,17 @@ class AuthenticateSession
             return $next($request);
         }
 
-        if (! $request->session()->has('session_auth_token')) {
+        if (! $request->session()->has($this->sessionAttributeKey)) {
             $this->storeSessionAuthToken($request);
         }
 
-        if ($request->session()->get('session_auth_token') !== $request->user()->getSessionAuthToken()) {
+        if ($request->session()->get($this->sessionAttributeKey) !== $request->user()->getSessionAuthToken()) {
             $this->logout($request);
         }
 
-        return $next($request);
+        return tap($next($request), function () use ($request) {
+            $this->storeSessionAuthToken($request);
+        });
     }
 
     /**
@@ -62,12 +72,23 @@ class AuthenticateSession
      */
     protected function storeSessionAuthToken($request)
     {
-        if (! $request->user()) {
+        /** @var HasSessionAuthInterface $user */
+        $user = $request->user();
+
+        if (!$user) {
             return;
         }
 
+        // Get user token, and check if its not falsey value
+        // if it is, then regenerate token
+        if(!$token = $user->getSessionAuthToken()) {
+            $token = tap($user, function($user) {
+                $user->regenerateSessionAuthToken();
+            })->getSessionAuthToken();
+        }
+
         $request->session()->put([
-            'session_auth_token' => $request->user()->getSessionAuthToken(),
+            $this->sessionAttributeKey => $token,
         ]);
     }
 

@@ -2,10 +2,10 @@
 
 namespace App\Providers;
 
+use App\UserAuth\Guards\SessionGuard;
 use App\UserAuth\Providers\UserProvider;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -26,6 +26,11 @@ class AuthServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->registerPolicies();
+
+        // Register custom session guard
+        Auth::extend('session', function($app, $name, array $config) {
+            return new SessionGuard($name, Auth::createUserProvider($config['provider']), $this->app['session.store']);
+        });
 
         // Register custom users provider
         Auth::provider('user-auth-eloquent', function ($app, array $config) {

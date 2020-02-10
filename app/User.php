@@ -3,12 +3,14 @@
 namespace App;
 
 use App\UserAuth\Common\Interfaces\EmailVerifiableInterface;
+use App\UserAuth\Common\Interfaces\HasSessionAuthInterface;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Str;
 
-class User extends Authenticatable implements EmailVerifiableInterface
+class User extends Authenticatable implements EmailVerifiableInterface, HasSessionAuthInterface
 {
     use Notifiable;
 
@@ -27,7 +29,7 @@ class User extends Authenticatable implements EmailVerifiableInterface
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token',
+        'password', 'remember_token', 'session_auth_token'
     ];
 
     /**
@@ -56,6 +58,23 @@ class User extends Authenticatable implements EmailVerifiableInterface
      */
     public function getSessionAuthToken()
     {
-        return 'some_token_from_user_account';
+        return $this->{$this->getSessionAuthTokenName()};
+    }
+
+    public function getSessionAuthTokenName()
+    {
+        return 'session_auth_token';
+    }
+
+    /**
+     * Regenerate and saves session auth token
+     *
+     * @return bool
+     */
+    public function regenerateSessionAuthToken(): bool
+    {
+        $this->{$this->getSessionAuthTokenName()} = Str::random(32);
+
+        return $this->save();
     }
 }
