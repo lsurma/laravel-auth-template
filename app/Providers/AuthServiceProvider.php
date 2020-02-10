@@ -26,10 +26,31 @@ class AuthServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->registerPolicies();
-
-        // Register custom session guard
+        
+        // Register custom session guard basend on laravels one
         Auth::extend('session', function($app, $name, array $config) {
-            return new SessionGuard($name, Auth::createUserProvider($config['provider']), $this->app['session.store']);
+            $guard = new SessionGuard(
+                $name, 
+                Auth::createUserProvider($config['provider'] ?? null), 
+                $app['session.store']
+            );
+
+            // When using the remember me functionality of the authentication services we
+            // will need to be set the encryption instance of the guard, which allows
+            // secure, encrypted cookie values to get generated for those cookies.
+            if (method_exists($guard, 'setCookieJar')) {
+                $guard->setCookieJar($app['cookie']);
+            }
+
+            if (method_exists($guard, 'setDispatcher')) {
+                $guard->setDispatcher($app['events']);
+            }
+
+            if (method_exists($guard, 'setRequest')) {
+                $guard->setRequest($app->refresh('request', $guard, 'setRequest'));
+            }
+
+            return $guard;
         });
 
         // Register custom users provider
