@@ -31,12 +31,6 @@ class LoginController extends Controller
     protected $redirectTo = RouteServiceProvider::HOME;
 
     /**
-     * Config group
-     * @var string 
-     */
-    protected string $configGroup = 'web';
-
-    /**
      * Guard used
      * @var string
      */
@@ -57,7 +51,7 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
 
         // UserAuthConfig support object
-        $this->config = new Config($this->configGroup);
+        $this->config = new Config($this->guard);
     }
 
     /**

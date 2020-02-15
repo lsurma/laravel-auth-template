@@ -13,18 +13,18 @@ class Registered
     public $user;
 
     /**
-     * @var EventData
+     * @var string
      */
-    public $eventData;
+    public $guard;
 
     /**
      *
      * @param Authenticatable $user
-     * @param EventData $eventData
+     * @param string $guard
      */
-    public function __construct(Authenticatable $user, EventData $eventData)
+    public function __construct(Authenticatable $user, string $guard)
     {
         $this->user = $user;
-        $this->eventData = $eventData;
+        $this->guard = $guard;
     }
 }

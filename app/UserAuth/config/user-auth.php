@@ -52,8 +52,8 @@ $defaults = [
 ];
 
 return [
-    // UserAuth config per group (can be guard named) 
-    'groups' => [
+    // UserAuth config per guard 
+    'guards' => [
 
         // Custom "web" guard related config (overrides those in "defaults")
         'web' => array_replace_recursive($defaults, [])

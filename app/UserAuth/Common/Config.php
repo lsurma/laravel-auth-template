@@ -14,12 +14,12 @@ class Config
      * Current config group
      * @var string
      */
-    protected ?string $group = null;
+    protected ?string $guard = null;
 
-    public function __construct(?string $group = null)
+    public function __construct(?string $guard = null)
     {
         // Determine config group if none is passed
-        $this->group = $group ?: config('auth.defaults.guard', 'web');
+        $this->guard = $guard ?: config('auth.defaults.guard', 'web');
     }
 
     public function get(?string $key = null, $default = null)
@@ -27,8 +27,8 @@ class Config
         // Glue parts of config key together with dot notation
         $key = implode(".", [
             static::PREFIX,
-            'groups',
-            $this->group,
+            'guards',
+            $this->guard,
             $key
         ]);
 

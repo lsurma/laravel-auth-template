@@ -18,7 +18,7 @@ class SendEmailVerificationNotification
     {
         /** @var \App\UserAuth\Services\UserAuthService $userAuthService */
         $userAuthService = (resolve(UserAuthService::class));
-        $userAuthService->setConfigGroup($event->eventData->configGroup);
+        $userAuthService->setGuard($event->guard);
         
         if (
             $userAuthService->config->emailVerificationEnabled()

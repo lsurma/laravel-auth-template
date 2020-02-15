@@ -44,12 +44,6 @@ class RegisterController extends Controller
     protected $redirectTo = RouteServiceProvider::HOME;
 
     /**
-     * Config group
-     * @var string 
-     */
-    protected string $configGroup = 'web';
-
-    /**
      * Guard used
      * @var string
      */
@@ -76,7 +70,7 @@ class RegisterController extends Controller
         $this->middleware('guest');
 
         // UserAuthConfig support object
-        $this->config = new Config($this->configGroup);
+        $this->config = new Config($this->guard);
         
         // Prepare captcha 
         if($this->config->captchaEnabled()) {
@@ -129,10 +123,7 @@ class RegisterController extends Controller
         event(new Registered($user));
 
         // Emit UserAuth package registered event with some aditional data
-        event(new UserAuthRegistered(
-            $user, 
-            new EventData($this->configGroup, $this->guard)
-        ));
+        event(new UserAuthRegistered($user, $this->guard));
 
         // Log in user automatically if enabled
         if($this->config->autoLoginAfterRegistrationEnabled()) {

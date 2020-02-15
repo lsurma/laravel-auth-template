@@ -33,13 +33,6 @@ class EmailVerificationController extends Controller
      */
     protected $redirectTo = RouteServiceProvider::HOME;
 
-    
-    /**
-     * Config group
-     * @var string 
-     */
-    protected string $configGroup = 'web';
-
     /**
      * Guard used
      * @var string
@@ -64,7 +57,7 @@ class EmailVerificationController extends Controller
         $this->middleware('throttle:5,15')->only('verify', 'resend');
 
         $this->userAuthSerivce = resolve(UserAuthService::class);
-        $this->userAuthSerivce->setConfigGroup($this->configGroup);
+        $this->userAuthSerivce->setGuard($this->guard);
 
         $this->redirectTo = route('user-auth.login');
     }

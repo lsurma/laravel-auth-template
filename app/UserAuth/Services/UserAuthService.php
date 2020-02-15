@@ -17,9 +17,9 @@ class UserAuthService
     {
     }
 
-    public function setConfigGroup(string $configGroup)
+    public function setGuard(string $guard)
     {
-        $this->config = new Config($configGroup);
+        $this->config = new Config($guard);
 
         return $this;
     }
