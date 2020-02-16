@@ -47,8 +47,10 @@ $defaults = [
     'registration' => [
         // Determine if user should be logged in automatically after registering
         'auto_login' => false,
-    ]
-    
+    ],
+  
+    // Determine if authenticated sessions should be logged into database
+    'session_log' => true,
 ];
 
 return [

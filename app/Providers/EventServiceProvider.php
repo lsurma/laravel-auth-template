@@ -4,10 +4,12 @@ namespace App\Providers;
 
 use App\UserAuth\Events\Registration\Registered as UserAuthRegistered;
 use App\UserAuth\Listeners\SendEmailVerificationNotification as UserAuthSendEmailVerificationNotification;
+use Illuminate\Auth\Events\Authenticated;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Event;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,14 @@ class EventServiceProvider extends ServiceProvider
 
         UserAuthRegistered::class => [
             UserAuthSendEmailVerificationNotification::class
+        ],
+
+        Authenticated::class => [
+            \App\UserAuth\Listeners\AuthSessionLog\Log::class
+        ],
+
+        Logout::class => [
+            \App\UserAuth\Listeners\AuthSessionLog\MarkAsLoggedOut::class
         ]
     ];
 

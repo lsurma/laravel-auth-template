@@ -40,6 +40,18 @@ class Config
     }
 
     //-----------------------------------------------------
+    // Session related config accessors
+    //-----------------------------------------------------
+
+    /**
+     * @return boolean
+     */
+    public function sessionLogEnabled(): bool
+    {
+        return $this->get('session_log', true);
+    }
+
+    //-----------------------------------------------------
     // Registration related config accessors
     //-----------------------------------------------------
 
